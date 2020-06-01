@@ -5,6 +5,13 @@ import IngredientList from "./IngredientList";
 import ErrorModal from "../UI/ErrorModal";
 import Search from "./Search";
 
+/**
+ *
+ * TODO:
+ *  - loading indicator when applicable
+ *
+ */
+
 const ingredientReducer = (currentIngredients, action) => {
   switch (action.type) {
     case "SET":
@@ -14,6 +21,10 @@ const ingredientReducer = (currentIngredients, action) => {
       return [...currentIngredients, action.ingredient];
     case "DELETE":
       return currentIngredients.filter(ing => ing.id !== action.id);
+    case "TOGGLE_LIKE":
+      return currentIngredients.map(ing => {
+        return ing.id === action.id ? { ...ing, isLiked: !ing.isLiked } : ing;
+      });
     default:
       throw new Error("Should not get here [Ingredients.js]");
   }
@@ -40,6 +51,8 @@ function Ingredients() {
     loading: false,
     error: null
   });
+
+  const { loading } = httpState;
 
   const addIngredientHandler = useCallback(ingredient => {
     dispatchHttp({ type: "SEND" });
@@ -78,6 +91,37 @@ function Ingredients() {
     dispatch({ type: "SET", ingredients: filteredIngredients });
   }, []);
 
+  /**
+   * Update Firebase
+   * Change @isLiked in @state
+   */
+  const likeIngredientHandler = useCallback(ing => {
+    console.log("ing: " + ing);
+    dispatchHttp({ type: "SEND" });
+    fetch(
+      `https://react-hooks-f5455.firebaseio.com/ingredients/${ing.id}/isLiked.json`,
+      {
+        method: "PUT",
+        body: JSON.stringify(!ing.isLiked),
+        headers: { "Content-Type": "application/json" }
+      }
+    )
+      .then(res => {
+        console.log(res);
+        if (res.status === 400) {
+          dispatchHttp({
+            type: "ERROR",
+            errorData: "400 Error when updating isLiked"
+          });
+        }
+        dispatchHttp({ type: "RESPONSE" });
+        dispatch({ type: "TOGGLE_LIKE", id: ing.id });
+      })
+      .catch(err => {
+        dispatchHttp({ type: "ERROR", errorData: "Can't update isLiked" });
+      });
+  });
+
   const closeError = () => {
     dispatchHttp({ type: "CLEAR" });
   };
@@ -90,13 +134,14 @@ function Ingredients() {
 
       <IngredientForm
         onAddIngredient={addIngredientHandler}
-        loading={httpState.isLoading}
+        loading={loading}
       />
 
       <section>
         <Search onLoadIngredients={filteredIngredientsHandler} />
         <IngredientList
           ingredients={userIngredients}
+          onLikeItem={likeIngredientHandler}
           onRemoveItem={removeIngredientHandler}
         />
       </section>
