@@ -22,3 +22,17 @@
   display: flex;
   justify-content: space-between;
 }
+
+.ing__title {
+  flex: 2;
+}
+
+.ing__amount {
+  flex: 1;
+}
+
+.ing__heart,
+.ing__delete {
+  width: 20px;
+  flex: auto;
+}

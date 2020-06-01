@@ -1,4 +1,4 @@
-import React, { useState, useCallback, useReducer } from "react";
+import React, { useCallback, useReducer } from "react";
 
 import IngredientForm from "./IngredientForm";
 import IngredientList from "./IngredientList";
@@ -8,6 +8,7 @@ import Search from "./Search";
 const ingredientReducer = (currentIngredients, action) => {
   switch (action.type) {
     case "SET":
+      console.log("SET: " + action.ingredients);
       return action.ingredients;
     case "ADD":
       return [...currentIngredients, action.ingredient];
@@ -39,9 +40,6 @@ function Ingredients() {
     loading: false,
     error: null
   });
-  // const [userIngredients, setUserIngredients] = useState([]);
-  // const [isLoading, setIsLoading] = useState(false);
-  // const [error, setError] = useState();
 
   const addIngredientHandler = useCallback(ingredient => {
     dispatchHttp({ type: "SEND" });
@@ -52,7 +50,6 @@ function Ingredients() {
     })
       .then(res => {
         dispatchHttp({ type: "RESPONSE" });
-        // console.log(res.json());
         return res.json();
       })
       .then(responseData => {
@@ -60,10 +57,6 @@ function Ingredients() {
           type: "ADD",
           ingredient: { id: responseData.name, ...ingredient }
         });
-        // setUserIngredients(prevIngredients => [
-        //   ...prevIngredients,
-        //   { id: responseData.name, ...ingredient }
-        // ]);
       });
   }, []);
 
@@ -74,11 +67,7 @@ function Ingredients() {
     })
       .then(res => {
         dispatchHttp({ type: "RESPONSE" });
-        console.log("ingredient: " + id + " was deleted");
         dispatch({ type: "DELETE", id: id });
-        // setUserIngredients(prevIngredients =>
-        //   prevIngredients.filter(ingredient => ingredient.id !== id)
-        // );
       })
       .catch(err => {
         dispatchHttp({ type: "ERROR", errorData: "Something went wrong!" });
@@ -87,7 +76,6 @@ function Ingredients() {
 
   const filteredIngredientsHandler = useCallback(filteredIngredients => {
     dispatch({ type: "SET", ingredients: filteredIngredients });
-    // setUserIngredients(filteredIngredients);
   }, []);
 
   const closeError = () => {
